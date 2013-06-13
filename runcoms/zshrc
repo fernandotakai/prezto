@@ -1,14 +1,56 @@
-#
-# Executes commands at the start of an interactive session.
-#
-# Authors:
-#   Sorin Ionescu <sorin.ionescu@gmail.com>
-#
-
-# Source Prezto.
+# My exports
 if [[ -s "${ZDOTDIR:-$HOME}/.zprezto/init.zsh" ]]; then
   source "${ZDOTDIR:-$HOME}/.zprezto/init.zsh"
 fi
 
-# Customize to your needs...
+export SVN_EDITOR='vim'
 
+#### Olark env setup ##########################################################
+export OLARK_HOME=~/olark/code/puppet/modules/olark/files                     #
+export OLARK_APPS=~/olark/code                                                #
+export OLARK_ENV=fernando                                                     #
+###############################################################################
+
+export LC_CTYPE=en_US.UTF-8
+export LC_ALL=en_US.UTF-8
+
+export GIT_EDITOR="vim"
+
+export HISTSIZE=100000000000000000
+export SAVEHIST=100000000000000000
+export HISTFILE="$HOME/.zsh_history"
+
+if [[ -s "/usr/local/bin/virtualenvwrapper.sh" ]]; then
+    source /usr/local/bin/virtualenvwrapper.sh
+    export WORKON_HOME="$HOME/Projects/virtualenvs"
+fi
+
+alias z='j -1'
+alias history="fc -l 1"
+
+# Customize to your needs...
+export PATH=/usr/local/Cellar/coreutils/8.17/libexec/gnubin:$HOME/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/git/bin:/usr/local/sbin:/usr/X11/bin:/$HOME/bin:/Users/fernandotakai/Projects/Android/android-sdk-mac_x86/platform-tools:$GOROOT/bin
+
+__git_files(){ 
+    _wanted files expl 'local files' _files 
+}
+
+gen_tags() {
+    unlink media/js/closure-library;
+    ctags -R .;
+    jsctags media/js -f jstags --ignore 'jquery|.*closure.*|.*.un~|.*.min.js|amara.js|popcorn.js|mirosubs-statwidget.js|unisubs-calcdeps.js|unisubs-statwidget.js';
+    cat jstags >> tags;
+    rm jstags;
+    ln -s /opt/google-closure media/js/closure-library;
+}
+
+alias tcp="tmux showb | pbcopy"
+alias vs="vagrant ssh"
+alias show_size="gdu --max-depth=1 -h | gsort -h"
+
+bindkey "^[[3~" delete-char
+export LESS="-R"
+
+echo ""
+cowsay "$(fortune -a)"
+echo ""
