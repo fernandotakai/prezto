@@ -50,7 +50,3 @@ alias show_size="gdu --max-depth=1 -h | gsort -h"
 
 bindkey "^[[3~" delete-char
 export LESS="-R"
-
-echo ""
-cowsay "$(fortune -a)"
-echo ""
