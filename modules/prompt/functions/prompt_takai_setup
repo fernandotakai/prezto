@@ -20,9 +20,9 @@ function prompt_steeef_precmd {
     # Check for untracked files or updated submodules since vcs_info doesn't.
     if [[ ! -z $(git ls-files --other --exclude-standard 2> /dev/null) ]]; then
       __PROMPT_STEEEF_VCS_UPDATE=1
-      fmt_branch="in ${__PROMPT_STEEEF_COLORS[1]}%b%f%u%c${__PROMPT_STEEEF_COLORS[4]}●%f"
+      fmt_branch="- %F{magenta}%b@$(git rev-parse --short HEAD 2> /dev/null)%f%u%c$%F{red}●%f"
     else
-      fmt_branch="in ${__PROMPT_STEEEF_COLORS[1]}%b%f%u%c"
+      fmt_branch="- %F{magenta}%b@$(git rev-parse --short HEAD 2> /dev/null)%f%u%c"
     fi
 
     zstyle ':vcs_info:*:prompt:*' formats "${fmt_branch}"
@@ -67,6 +67,7 @@ function prompt_steeef_setup {
     "%F{magenta}"
     "%F{red}"
     "%F{green}"
+    "%F{grey}"
   )
 
   # Enable VCS systems you use.
@@ -95,25 +96,9 @@ function prompt_steeef_setup {
   zstyle ':vcs_info:*:prompt:*' nvcsformats   ""
 
   PROMPT="
-${__PROMPT_STEEEF_COLORS[3]}%n%f at ${__PROMPT_STEEEF_COLORS[2]}%m%f in ${__PROMPT_STEEEF_COLORS[5]}%~%f "'${vcs_info_msg_0_}'"
+%F{blue}%m%f %F{green}%~%f "'${vcs_info_msg_0_}'"
 "'$(virtualenv_info)'"$ "
+  RPROMPT="%F{242}%T%f"
 }
 
 prompt_steeef_setup "$@"
-
-#zstyle ':omz:completion' indicator '%B%F{red}...%f%b'
-#zstyle ':omz:prompt' vicmd '%F{yellow}❮%f%B%F{red}❮%f%b%F{red}❮%f'
-#zstyle ':omz:plugin:git:prompt' action ':%%B%F{yellow}%s%f%%b'
-#zstyle ':omz:plugin:git:prompt' added ' %%B%F{green}✚%f%%b'
-#zstyle ':omz:plugin:git:prompt' ahead ' %%B%F{yellow}⬆%f%%b'
-#zstyle ':omz:plugin:git:prompt' behind ' %%B%F{yellow}⬇%f%%b'
-#zstyle ':omz:plugin:git:prompt' branch '%F{yellow}%b%f'
-#zstyle ':omz:plugin:git:prompt' deleted ' %%B%F{red}✖%f%%b'
-#zstyle ':omz:plugin:git:prompt' modified ' %%B%F{blue}✱%f%%b'
-#zstyle ':omz:plugin:git:prompt' renamed ' %%B%F{magenta}➜%f%%b'
-#zstyle ':omz:plugin:git:prompt' commit '%c'
-#zstyle ':omz:plugin:git:prompt' stashed ' %%B%F{cyan}✭%f%%b'
-#zstyle ':omz:plugin:git:prompt' unmerged ' %%B%F{yellow}═%f%%b'
-#zstyle ':omz:plugin:git:prompt' untracked ' %%B%F{white}◼%f%%b'
-#zstyle ':omz:plugin:git:prompt' prompt 'at %b'
-#zstyle ':omz:plugin:git:prompt' rprompt '%A%B%S%a%d%m%r%U%u'
