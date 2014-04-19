@@ -18,8 +18,12 @@ version is 4.3.10.
   2. Run:
 
         curl https://raw.github.com/fernandotakai/prezto/master/install.zsh | zsh
+  
+  3. Change your terminal:
+  
+        chsh -s /bin/zsh
 
-  3. Open a new Zsh terminal window or tab.
+  4. Open a new Zsh terminal window or tab.
 
 ### Troubleshooting
 
