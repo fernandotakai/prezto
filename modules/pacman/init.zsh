@@ -37,13 +37,13 @@ fi
 alias pac='pacman'
 
 # Installs packages from repositories.
-alias paci='sudo pacman --sync'
+alias paci='sudo pacman -S'
 
 # Installs packages from files.
-alias pacI='sudo pacman --upgrade'
+alias pacI='sudo pacman -U'
 
 # Removes packages and unneeded dependencies.
-alias pacx='sudo pacman --remove'
+alias pacx='sudo pacman -R'
 
 # Removes packages, their configuration, and unneeded dependencies.
 alias pacX='sudo pacman --remove --nosave --recursive'
@@ -52,13 +52,13 @@ alias pacX='sudo pacman --remove --nosave --recursive'
 alias pacq='pacman --sync --info'
 
 # Displays information about a package from the local database.
-alias pacQ='pacman --query --info'
+alias pacQ='pacman -Qi'
 
 # Searches for packages in the repositories.
-alias pacs='pacman --sync --recursive'
+alias pacs='pacman -Ss'
 
 # Searches for packages in the local database.
-alias pacS='pacman --query --recursive'
+alias pacS='pacman -Qs '
 
 # Lists orphan packages.
 alias pacman-list-orphans='sudo pacman --query --deps --unrequired'

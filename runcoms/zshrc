@@ -6,9 +6,7 @@ fi
 export SVN_EDITOR='vim'
 
 #### Olark env setup ##########################################################
-export OLARK_HOME=~/olark/code/puppet/modules/olark/files                     #
-export OLARK_APPS=~/olark/code                                                #
-export OLARK_ENV=fernando                                                     #
+export OLARK_APPS=~/olark/                                                    #
 ###############################################################################
 
 export LC_CTYPE=en_US.UTF-8
@@ -20,33 +18,119 @@ export HISTSIZE=100000000000000000
 export SAVEHIST=100000000000000000
 export HISTFILE="$HOME/.zsh_history"
 
-if [[ -s "/usr/local/bin/virtualenvwrapper.sh" ]]; then
-    source /usr/local/bin/virtualenvwrapper.sh
+if [[ -s "/usr/bin/virtualenvwrapper.sh" ]]; then
+    source /usr/bin/virtualenvwrapper.sh
     export WORKON_HOME="$HOME/Projects/virtualenvs"
 fi
 
-alias z='j -1'
+alias z='j'
 alias history="fc -l 1"
 
 # Customize to your needs...
-export PATH=/usr/local/Cellar/coreutils/8.17/libexec/gnubin:$HOME/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/git/bin:/usr/local/sbin:/usr/X11/bin:/$HOME/bin:/Users/fernandotakai/Projects/Android/android-sdk-mac_x86/platform-tools:$GOROOT/bin
+export PATH=$HOME/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/git/bin:/usr/local/sbin:/usr/X11/bin:/usr/bin/core_perl/:/home/ftakai/.gem/ruby/2.2.0/bin:/opt/loggi/ops/ansible/bin:/home/ftakai/olark/buildtools:$PATH
+
+export OLARK_VENV_FLAGS='-p /usr/bin/python2'
 
 __git_files(){ 
     _wanted files expl 'local files' _files 
 }
 
-gen_tags() {
-    unlink media/js/closure-library;
-    ctags -R .;
-    jsctags media/js -f jstags --ignore 'jquery|.*closure.*|.*.un~|.*.min.js|amara.js|popcorn.js|mirosubs-statwidget.js|unisubs-calcdeps.js|unisubs-statwidget.js';
-    cat jstags >> tags;
-    rm jstags;
-    ln -s /opt/google-closure media/js/closure-library;
-}
-
-alias tcp="tmux showb | pbcopy"
-alias vs="vagrant ssh"
-alias show_size="gdu --max-depth=1 -h | gsort -h"
+alias show_size="du --max-depth=1 -h | sort -h"
 
 bindkey "^[[3~" delete-char
 export LESS="-R"
+
+alias ol="workon olark"
+alias oc="olark-console"
+
+function ff(){
+    file=$(ag . --nocolor -l -g '' --ignore vendor | fzf-tmux -d "40%")
+
+    if [[ -n $file ]]; then
+        vim -o $file
+    fi
+}
+
+function getpass(){
+    id=$(lpass ls | sort | fzf | sed -r 's/^.*id: ([0-9]+).*$/\1/' | tr -d '\n')
+
+    if [[ -n $id ]]; then
+        pass=$(lpass show $id | grep Password | cut -d ':' -f 2 | tr -d ' ' | tr -d '\n') 
+        if [[ $1 == '-n' ]]; then
+            echo $pass
+        else 
+            echo -n $pass | copy-stuff
+            echo "copied password"
+        fi
+    fi
+}
+
+function git-add(){ 
+    git add $(git status -s | egrep '^(\s|\?\?).*?$' | fzf -m | cut -c4-)
+    git commit -v
+}
+
+function git-remove(){
+    git reset HEAD $(git status -s | egrep -v '^\s.*?$' | grep -v ?? | fzf -m | cut -c4-) 
+}
+
+function git-checkout(){
+    git checkout -- $(git status -s | egrep '^(\s|\?\?).*?$' | fzf -m | cut -c4-) 
+}
+
+function nzb(){
+    curl -s -F apikey="14910402cd33ec67ab1623dcc79707ab" -F mode="addfile" -F name=@"$1" "http://mediacenter.local:8080/sabnzbd/api" && rm $1
+}
+
+alias get_olark_lastpass="lpass show 3615768916 | tail -1 | tr -d '\n' | copy-stuff"
+alias addon-sdk="cd /opt/addon-sdk && source bin/activate; cd -"
+
+function oog(){
+    url=$(git config --get remote.origin.url | tr ':' '/' | cut -c 5-)
+    branch=$(git rev-parse --abbrev-ref HEAD)
+    firefox "https://$url/tree/$branch"
+}
+
+function ooj(){
+    firefox "https://deploy.loggi.com/job/loggi-web-unittest-$(git rev-parse --abbrev-ref HEAD)/" 
+}
+
+function gbranch(){
+    git rev-parse --abbrev-ref HEAD | copy-stuff
+}
+
+alias open=xdg-open
+
+alias start="sudo systemctl start"
+alias stop="sudo systemctl stop"
+alias restart="sudo systemctl restart"
+alias status="sudo systemctl status"
+alias cal="cal -3"
+alias gcv="git commit -v"
+
+function update_package(){ 
+    cd ~/builds && rm -fr $1 && cower -d $1 && cd $1 && makepkg -s && notify-send -u critical "aur update" "starting to install $1" && pacI *.xz && cd -
+}
+
+function update-all-packages(){
+    packages=($(cat output.txt | sed -r 's/:: ([a-z0-9-]{1,}) .*?$/\1/g' | fzf -m))
+    
+    if [[ -n $packages ]]; then
+        for pkg in $packages; do
+            echo $pkg
+            echo update_package $pkg
+        done
+    fi
+}
+
+function load_rvm(){
+    export PATH="$PATH:$HOME/.rvm/bin" # Add RVM to PATH for scripting
+
+    [[ -s "$HOME/.rvm/scripts/rvm" ]] && source "$HOME/.rvm/scripts/rvm" # Load RVM into a shell session *as a function*
+}
+
+
+# source /usr/share/zsh/site-functions/_fzf
+source /usr/share/fzf/key-bindings.zsh
+source /usr/share/fzf/completion.zsh
+stty -ixon
