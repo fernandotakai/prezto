@@ -8,6 +8,7 @@
 #
 # General
 #
+zstyle ':prezto:module:ssh:load' identities 'id_rsa' 'new_id_rsa'
 
 # Set case-sensitivity for completion, history lookup, etc.
 zstyle ':prezto:*:*' case-sensitive 'no'
@@ -39,7 +40,8 @@ zstyle ':prezto:load' pmodule \
     'tmux' \
     'history-substring-search' \
     'fasd' \
-    'pacman'
+    'pacman' \
+    'ssh'
 
 #
 # Editor
@@ -47,6 +49,7 @@ zstyle ':prezto:load' pmodule \
 
 # Set the key mapping style to 'emacs' or 'vi'.
 zstyle ':prezto:module:editor' keymap 'emacs'
+
 
 # Auto convert .... to ../..
 # zstyle ':prezto:module:editor' dot-expansion 'yes'
