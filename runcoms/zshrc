@@ -129,6 +129,10 @@ function load_rvm(){
     [[ -s "$HOME/.rvm/scripts/rvm" ]] && source "$HOME/.rvm/scripts/rvm" # Load RVM into a shell session *as a function*
 }
 
+function nvm(){
+    source /usr/share/nvm/init-nvm.sh
+    nvm $*
+}
 
 # source /usr/share/zsh/site-functions/_fzf
 source /usr/share/fzf/key-bindings.zsh
