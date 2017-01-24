@@ -24,13 +24,9 @@ if [[ ! -S "$SSH_AUTH_SOCK" ]]; then
   # Export environment variables.
   source "$_ssh_agent_env" 2> /dev/null
 
-# Load identities.
-if ssh-add -l 2>&1 | grep -q 'The agent has no identities'; then
-  zstyle -a ':prezto:module:ssh:load' identities '_ssh_identities'
-  if (( ${#_ssh_identities} > 0 )); then
-    ssh-add "$_ssh_dir/${^_ssh_identities[@]}" 2> /dev/null
-  else
-    ssh-add 2> /dev/null
+  # Start ssh-agent if not started.
+  if ! ps -U "$LOGNAME" -o pid,ucomm | grep -q -- "${SSH_AGENT_PID:--1} ssh-agent"; then
+    eval "$(ssh-agent | sed '/^echo /d' | tee "$_ssh_agent_env")"
   fi
 fi
 

@@ -138,5 +138,7 @@ if [[ -s "/usr/share/fzf/key-bindings.zsh" ]]; then
 fi
 stty -ixon
 
-export NVM_DIR="/home/ftakai/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"  # This loads nvm
+function nvm() {
+    export NVM_DIR="/home/ftakai/.nvm"
+    [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"  # This loads nvm
+}
