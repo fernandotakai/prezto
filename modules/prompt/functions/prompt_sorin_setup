@@ -5,7 +5,28 @@
 #   Sorin Ionescu <sorin.ionescu@gmail.com>
 #
 # Screenshots:
-#   http://i.imgur.com/nBEEZ.png
+#   http://i.imgur.com/nrGV6pg.png
+#
+
+#
+# 16 Terminal Colors
+# -- ---------------
+#  0 black
+#  1 red
+#  2 green
+#  3 yellow
+#  4 blue
+#  5 magenta
+#  6 cyan
+#  7 white
+#  8 bright black
+#  9 bright red
+# 10 bright green
+# 11 bright yellow
+# 12 bright blue
+# 13 bright magenta
+# 14 bright cyan
+# 15 bright white
 #
 
 # Load dependencies.
@@ -18,8 +39,37 @@ function prompt_sorin_pwd {
     _prompt_sorin_pwd="$MATCH"
     unset MATCH
   else
-    _prompt_sorin_pwd="${${${(@j:/:M)${(@s:/:)pwd}##.#?}:h}%/}/${pwd:t}"
+    _prompt_sorin_pwd="${${${${(@j:/:M)${(@s:/:)pwd}##.#?}:h}%/}//\%/%%}/${${pwd:t}//\%/%%}"
   fi
+}
+
+function prompt_sorin_git_info {
+  if (( _prompt_sorin_precmd_async_pid > 0 )); then
+    # Append Git status.
+    if [[ -s "$_prompt_sorin_precmd_async_data" ]]; then
+      alias typeset='typeset -g'
+      source "$_prompt_sorin_precmd_async_data"
+      RPROMPT+='${git_info:+${(e)git_info[status]}}'
+      unalias typeset
+    fi
+
+    # Reset PID.
+    _prompt_sorin_precmd_async_pid=0
+
+    # Redisplay prompt.
+    zle && zle reset-prompt
+  fi
+}
+
+function prompt_sorin_precmd_async {
+  # Get Git repository information.
+  if (( $+functions[git-info] )); then
+    git-info
+    typeset -p git_info >! "$_prompt_sorin_precmd_async_data"
+  fi
+
+  # Signal completion to parent process.
+  kill -WINCH $$
 }
 
 function prompt_sorin_precmd {
@@ -37,6 +87,8 @@ function prompt_sorin_setup {
   setopt LOCAL_OPTIONS
   unsetopt XTRACE KSH_ARRAYS
   prompt_opts=(cr percent subst)
+  _prompt_sorin_precmd_async_pid=0
+  _prompt_sorin_precmd_async_data="${TMPPREFIX}-prompt_sorin_data"
 
   # Load required functions.
   autoload -Uz add-zsh-hook
@@ -45,10 +97,10 @@ function prompt_sorin_setup {
   add-zsh-hook precmd prompt_sorin_precmd
 
   # Set editor-info parameters.
-  zstyle ':prezto:module:editor:info:completing' format '%B%F{red}...%f%b'
-  zstyle ':prezto:module:editor:info:keymap:primary' format ' %B%F{red}❯%F{yellow}❯%F{green}❯%f%b'
-  zstyle ':prezto:module:editor:info:keymap:primary:overwrite' format ' %F{red}♺%f'
-  zstyle ':prezto:module:editor:info:keymap:alternate' format ' %B%F{green}❮%F{yellow}❮%F{red}❮%f%b'
+  zstyle ':prezto:module:editor:info:completing' format '%B%F{7}...%f%b'
+  zstyle ':prezto:module:editor:info:keymap:primary' format ' %B%F{1}❯%F{3}❯%F{2}❯%f%b'
+  zstyle ':prezto:module:editor:info:keymap:primary:overwrite' format ' %F{3}♺%f'
+  zstyle ':prezto:module:editor:info:keymap:alternate' format ' %B%F{2}❮%F{3}❮%F{1}❮%f%b'
 
   # Set git-info parameters.
   zstyle ':prezto:module:git:info' verbose 'yes'
@@ -80,5 +132,13 @@ $ '
   SPROMPT='zsh: correct %F{red}%R%f to %F{green}%r%f [nyae]? '
 }
 
-prompt_sorin_setup "$@"
+function prompt_sorin_preview {
+  local +h PROMPT=''
+  local +h RPROMPT=''
+  local +h SPROMPT=''
 
+  editor-info 2>/dev/null
+  prompt_preview_theme 'sorin'
+}
+
+prompt_sorin_setup "$@"

@@ -98,4 +98,3 @@ ${_prompt_steeef_colors[2]}%m%f ${_prompt_steeef_colors[5]}%~%f "'${vcs_info_msg
 }
 
 prompt_steeef_setup "$@"
-

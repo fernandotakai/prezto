@@ -13,3 +13,11 @@
     zcompile "$zcompdump"
   fi
 } &!
+
+# Print a random, hopefully interesting, adage.
+if (( $+commands[weirdfortune] )); then
+  if [[ -t 0 || -t 1 ]]; then
+    weirdfortune -all
+    print
+  fi
+fi
