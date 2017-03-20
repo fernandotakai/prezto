@@ -29,7 +29,7 @@ alias z='j'
 alias history="fc -l 1"
 
 # Customize to your needs...
-export PATH=$HOME/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/git/bin:/usr/local/sbin:/usr/X11/bin:/usr/bin/core_perl/:/home/ftakai/.gem/ruby/2.2.0/bin:/opt/loggi/ops/ansible/bin:/home/ftakai/olark/buildtools:$PATH
+export PATH=$HOME/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/sbin:/usr/bin/core_perl/:/home/ftakai/olark/buildtools:$PATH
 
 export OLARK_VENV_FLAGS='-p /usr/bin/python2'
 
@@ -53,6 +53,21 @@ function ff(){
     fi
 }
 
+function ffg(){
+
+    if [[ -z $1 ]]; then
+        echo "you need to specify a term m8"
+        return
+    fi
+
+    file=$(git grep -n $1 | fzf-tmux -d "40%" | awk -F ":" '{ print $1 " " $2 }')
+    if [[ ! -z $file ]]; then
+        split=("${(@s/ /)file}")
+        nvim $(echo $split[1] | tr '\n' ' ') +$split[2]
+    fi
+
+}
+
 function getpass(){
     id=$(lpass ls | sort | fzf | sed -r 's/^.*id: ([0-9]+).*$/\1/' | tr -d '\n')
 
@@ -68,16 +83,16 @@ function getpass(){
 }
 
 function git-add(){ 
-    git add $(git status -s | egrep '^(\s|\?\?).*?$' | fzf -m | cut -c4-)
+    git add $(git status -s | egrep '^(\s|\?\?).*?$' | fzf-tmux -d "40%" -m | cut -c4-)
     git commit -v
 }
 
 function git-remove(){
-    git reset HEAD $(git status -s | egrep -v '^\s.*?$' | grep -v ?? | fzf -m | cut -c4-) 
+    git reset HEAD -- $(git status -s | egrep -v '^(\s|\?\?).*?$' | fzf-tmux -d "40%" -m | cut -c4-)
 }
 
 function git-checkout(){
-    git checkout -- $(git status -s | egrep '^(\s|\?\?).*?$' | fzf -m | cut -c4-) 
+    git checkout -- $(git status -s | egrep '^(\s|\?\?).*?$' | fzf-tmux -d "40%" -m | cut -c4-) 
 }
 
 function nzb(){
@@ -125,7 +140,7 @@ function update-all-packages(){
     fi
 }
 
-function load_rvm(){
+function rvm(){
     export PATH="$PATH:$HOME/.rvm/bin" # Add RVM to PATH for scripting
 
     [[ -s "$HOME/.rvm/scripts/rvm" ]] && source "$HOME/.rvm/scripts/rvm" # Load RVM into a shell session *as a function*
@@ -142,3 +157,9 @@ function nvm() {
     export NVM_DIR="/home/ftakai/.nvm"
     [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"  # This loads nvm
 }
+
+# The next line updates PATH for the Google Cloud SDK.
+source '/home/ftakai/builds/google-cloud-sdk/path.zsh.inc'
+
+# The next line enables shell command completion for gcloud.
+source '/home/ftakai/builds/google-cloud-sdk/completion.zsh.inc'
