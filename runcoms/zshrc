@@ -42,9 +42,6 @@ alias show_size="du --max-depth=1 -h | sort -h"
 bindkey "^[[3~" delete-char
 export LESS="-R"
 
-alias ol="workon olark"
-alias oc="olark-console"
-
 function ff(){
     file=$(ag . --nocolor -l -g '' --ignore vendor --ignore dist | fzf-tmux -m -d "40%")
 
@@ -95,10 +92,6 @@ function git-checkout(){
     git checkout -- $(git status -s | egrep '^(\s|\?\?).*?$' | fzf-tmux -d "40%" -m | cut -c4-) 
 }
 
-function nzb(){
-    curl -s -F apikey="14910402cd33ec67ab1623dcc79707ab" -F mode="addfile" -F name=@"$1" "http://mediacenter.local:8080/sabnzbd/api" && rm $1
-}
-
 alias get_olark_lastpass="lpass show 3615768916 | tail -1 | tr -d '\n' | copy-stuff"
 alias addon-sdk="cd /opt/addon-sdk && source bin/activate; cd -"
 
@@ -106,10 +99,6 @@ function oog(){
     url=$(git config --get remote.origin.url | tr ':' '/' | cut -c 5-)
     branch=$(git rev-parse --abbrev-ref HEAD)
     firefox "https://$url/tree/$branch"
-}
-
-function ooj(){
-    firefox "https://deploy.loggi.com/job/loggi-web-unittest-$(git rev-parse --abbrev-ref HEAD)/" 
 }
 
 function gbranch(){
@@ -159,7 +148,7 @@ function nvm() {
 }
 
 # The next line updates PATH for the Google Cloud SDK.
-source '/home/ftakai/builds/google-cloud-sdk/path.zsh.inc'
+[[ -s "$HOME/builds/google-cloud-sdk/path.zsh.inc" ]] && source "$HOME/builds/google-cloud-sdk/path.zsh.inc"
 
 # The next line enables shell command completion for gcloud.
-source '/home/ftakai/builds/google-cloud-sdk/completion.zsh.inc'
+[[ -s "$HOME/builds/google-cloud-sdk/completion.zsh.inc" ]] && source "$HOME/builds/google-cloud-sdk/completion.zsh.inc"
