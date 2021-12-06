@@ -1,13 +1,229 @@
-#
-# Executes commands at the start of an interactive session.
-#
-# Authors:
-#   Sorin Ionescu <sorin.ionescu@gmail.com>
-#
+zmodload zsh/zprof
 
-# Source Prezto.
+# Customize to your needs...
+export PATH="/Users/ftakai/homebrew/opt/coreutils/libexec/gnubin:$PATH"
+export PATH=$HOME/bin:$PATH
+
+eval "$(/Users/ftakai/homebrew/bin/brew shellenv)"
+
+fpath=("$HOME/homebrew/share/zsh/site-functions" $fpath)
+
+# My exports
 if [[ -s "${ZDOTDIR:-$HOME}/.zprezto/init.zsh" ]]; then
   source "${ZDOTDIR:-$HOME}/.zprezto/init.zsh"
 fi
 
-# Customize to your needs...
+alias vim=nvim
+
+export SVN_EDITOR='vim'
+export EDITOR='nvim'
+export SUDO_EDITOR='nvim'
+
+export LC_CTYPE=en_US.UTF-8
+export LC_ALL=en_US.UTF-8
+
+export GIT_EDITOR="nvim"
+
+export HISTSIZE=1000000
+export SAVEHIST=1000000
+export HISTFILE="$HOME/.zsh_history"
+
+if [[ -s "/usr/bin/virtualenvwrapper.sh" ]]; then
+    source /usr/bin/virtualenvwrapper.sh
+    export WORKON_HOME="$HOME/Projects/virtualenvs"
+fi
+
+alias z='j'
+alias history="fc -l 1"
+
+# export PYENV_ROOT="$HOME/.pyenv"
+# export ANDROID_HOME="$HOME/Android/Sdk"
+
+__git_files(){ 
+    _wanted files expl 'local files' _files 
+}
+
+alias show_size="du --max-depth=1 -h | sort -h"
+
+bindkey "^[[3~" delete-char
+export LESS="-R"
+
+if [[ -s "$HOME/.zsh-histdb/sqlite-history.zsh" ]]; then
+    HISTDB_TABULATE_CMD=(sed -e $'s/\x1f/\t/g')
+    source $HOME/.zsh-histdb/sqlite-history.zsh
+    autoload -Uz add-zsh-hook
+fi
+
+alias kubectl='echo use kprod or any other alias, you dumbass!'
+alias kprod='aws-vault exec eks-cluster-creator -- /usr/local/bin/kubectl'
+alias kstaging='aws-vault exec eks-cluster-creator -- /usr/local/bin/kubectl -n staging-web'
+alias klocal='minikube kubectl --'
+
+function kubebash(){
+    instance=$(kprod get pods | awk '{print $1}' | fzf)
+
+    if [[ -n $instance ]]; then
+        kprod exec $instance -ti bash
+    fi
+}
+
+function kubedescribe(){
+    instance=$(kprod get pods | awk '{print $1}' | fzf)
+
+    if [[ -n $instance ]]; then
+        kprod describe pod $instance | less
+    fi
+}
+
+
+function kubelogs(){
+    instance=$(kubectl get pods | awk '{print $1}' | fzf)
+
+    if [[ -n $instance ]]; then
+        kubectl logs --tail=100 -f $instance
+    fi
+}
+
+function kubedelete(){
+    instance=$(kubectl get pods | awk '{print $1}' | fzf)
+
+    if [[ -n $instance ]]; then
+        kubectl delete pod $instance
+    fi
+}
+
+function ff(){
+    file=$(ag . --nocolor -l -g '' --ignore vendor --ignore dist | fzf-tmux -m -d "40%")
+
+    if [[ -n $file ]]; then
+        nvim $(echo $file | tr '\n' ' ')
+    fi
+}
+
+function ffg(){
+    file=$(INITIAL_QUERY=""
+    RG_PREFIX="rg --column --line-number --no-heading --color=always --smart-case --ignore-file .gitignore"
+    FZF_DEFAULT_COMMAND="$RG_PREFIX '$INITIAL_QUERY'" \
+      fzf --bind "change:reload:$RG_PREFIX {q} || true" \
+          --ansi --disabled --query "$INITIAL_QUERY" \
+          --height=50% --layout=reverse)
+
+    if [[ ! -z $file ]]; then
+        split=("${(@s/:/)file}")
+        vim $split[1] "+$split[2] norm! zzV"
+    fi
+
+}
+
+function getpass(){
+    id=$(lpass ls | sort | fzf | sed -r 's/^.*id: ([0-9]+).*$/\1/' | tr -d '\n')
+
+    if [[ -n $id ]]; then
+        pass=$(lpass show $id | grep Password | cut -d ':' -f 2 | tr -d ' ' | tr -d '\n') 
+        if [[ $1 == '-n' ]]; then
+            echo $pass
+        else 
+            echo -n $pass | copy-stuff
+            echo "copied password"
+        fi
+    fi
+}
+
+function git-add(){ 
+    git add $(git status -s | egrep '^(\s|\?\?).*?$' | fzf -m --preview 'file_status.py {}' | cut -c4-)
+    git commit -v
+}
+
+function git-remove(){
+    git reset HEAD -- $(git status -s | egrep -v '^(\s|\?\?).*?$' | fzf -m --preview 'file_status.py {}' | cut -c4-)
+}
+
+function git-checkout(){
+    git checkout -- $(git status -s | egrep '^(\s|\?\?).*?$' | fzf -m --preview 'file_status.py {}' | cut -c4-) 
+}
+
+alias addon-sdk="cd /opt/addon-sdk && source bin/activate; cd -"
+
+ 
+_get_repo() {
+  echo "$1" | sed -e "s/.git$//" -e "s/.*github.com[:/]\(.*\)/\1/"
+}
+
+_build_url() {
+  # shellcheck disable=SC2039
+  local upstream origin branch repo pr_url target
+  upstream="$(git config --get remote.upstream.url)"
+  origin="$(git config --get remote.origin.url)"
+  branch="$(git symbolic-ref --short HEAD)"
+  repo="$(_get_repo "$origin")"
+  pr_url="https://github.com/$repo/pull/new"
+  target="$1"
+  test -z "$target" && target=$(git for-each-ref --format='%(upstream:short)' "$(git symbolic-ref -q HEAD)" | cut -d '/' -f 2)
+  test -z "$target" && target="master"
+  if [ -z "$upstream" ]; then
+    echo "$pr_url/$target...$branch"
+  else
+    # shellcheck disable=SC2039
+    local origin_name upstream_name
+    origin_name="$(echo "$repo" | cut -f1 -d'/')"
+    upstream_name="$(_get_repo "$upstream" | cut -f1 -d'/')"
+    echo "$pr_url/$upstream_name:$target...$origin_name:$branch"
+  fi
+}
+
+# shellcheck disable=SC2039
+oog() {
+  # shellcheck disable=SC2039
+  local url
+  url="$(_build_url "$*")"
+  firefox-developer-edition "$url" > /dev/null 2> /dev/null
+}
+
+function gbranch(){
+    git rev-parse --abbrev-ref HEAD | copy-stuff
+}
+
+alias cal="cal -3"
+alias gcv="git commit -v"
+alias ssh="TERM=screen-256color ssh"
+
+function update_package(){ 
+    cd ~/builds && rm -fr $1 && cower -d $1 && cd $1 && makepkg -s && notify-send -u critical "aur update" "starting to install $1" && pacI *.xz && cd -
+}
+
+function update-all-packages(){
+    packages=($(cat output.txt | sed -r 's/:: ([a-z0-9-]{1,}) .*?$/\1/g' | fzf -m))
+    
+    if [[ -n $packages ]]; then
+        for pkg in $packages; do
+            echo $pkg
+            echo update_package $pkg
+        done
+    fi
+}
+
+stty -ixon
+
+function nvm() {
+    export NVM_DIR="/home/ftakai/.nvm"
+    [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"  # This loads nvm
+}
+
+# The next line updates PATH for the Google Cloud SDK.
+[[ -s "$HOME/builds/google-cloud-sdk/path.zsh.inc" ]] && source "$HOME/builds/google-cloud-sdk/path.zsh.inc"
+
+# The next line enables shell command completion for gcloud.
+[[ -s "$HOME/builds/google-cloud-sdk/completion.zsh.inc" ]] && source "$HOME/builds/google-cloud-sdk/completion.zsh.inc"
+
+[[ -s "$HOME/bin/kubectl_completion" ]] && source "$HOME/bin/kubectl_completion"
+
+[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+
+# source /home/ftakai/.config/broot/launcher/bash/br
+export VIRTUAL_ENV_DISABLE_PROMPT=1
+# complete -C '/usr/bin/aws_completer' aws
+
+eval "$(pyenv init - --no-rehash zsh)"
+export PATH="/Users/ftakai/.pyenv/shims:${PATH}"
+
+pgrep -qf "powerline-daemon -q" || echo "not running lmao"
