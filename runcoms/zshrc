@@ -1,16 +1,21 @@
 zmodload zsh/zprof
 
 # Customize to your needs...
-export PATH="/Users/ftakai/homebrew/opt/coreutils/libexec/gnubin:$PATH"
 export PATH=$HOME/bin:$PATH
 
-eval "$(/Users/ftakai/homebrew/bin/brew shellenv)"
-
-fpath=("$HOME/homebrew/share/zsh/site-functions" $fpath)
+if [[ -f "$HOME/homebrew/bin/brew" ]]; then
+    eval "$(/Users/ftakai/homebrew/bin/brew shellenv)"
+    fpath=("$HOME/homebrew/share/zsh/site-functions" $fpath)
+    export PATH="/Users/ftakai/homebrew/opt/coreutils/libexec/gnubin:$PATH"
+fi
 
 # My exports
 if [[ -s "${ZDOTDIR:-$HOME}/.zprezto/init.zsh" ]]; then
   source "${ZDOTDIR:-$HOME}/.zprezto/init.zsh"
+fi
+
+if [[ -s /mnt/c/WINDOWS ]]; then
+    export PATH="/home/ftakai/.pyenv/shims:/home/ftakai/bin:/usr/local/bin:/usr/local/sbin:/home/ftakai/.pyenv/shims:/home/ftakai/.pyenv/bin:/home/ftakai/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/usr/lib/wsl/lib"
 fi
 
 alias vim=nvim
@@ -223,7 +228,12 @@ function nvm() {
 export VIRTUAL_ENV_DISABLE_PROMPT=1
 # complete -C '/usr/bin/aws_completer' aws
 
-eval "$(pyenv init - --no-rehash zsh)"
-export PATH="/Users/ftakai/.pyenv/shims:${PATH}"
+if [[ ! -f $(which pyenv) ]]; then
+    export PATH="$HOME/.pyenv/bin:$PATH"
+fi;
 
-pgrep -qf "powerline-daemon -q" || echo "not running lmao"
+eval "$(pyenv init - --no-rehash zsh)"
+export PATH="$HOME/.pyenv/shims:${PATH}"
+export PYTHON_CONFIGURE_OPTS="--enable-shared"
+
+pgrep -f "powerline-daemon -q" 2>&1 > /dev/null || powerline-daemon -q
