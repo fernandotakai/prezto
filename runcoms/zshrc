@@ -66,8 +66,8 @@ fi
 KUBECTL=$(which kubectl)
 
 # alias kubectl='echo use kprod or any other alias, you dumbass!'
-alias kprod='aws-vault exec fernando -- /usr/local/bin/kubectl'
-alias kstaging='aws-vault exec fernando -- /usr/local/bin/kubectl -n staging-web'
+alias kprod='kubectl'
+alias kstaging='kubectl -n staging-web'
 alias klocal='minikube kubectl --'
 
 function kubebash(){
