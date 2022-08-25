@@ -19,6 +19,10 @@ if [[ -s /mnt/c/WINDOWS ]]; then
     export NODE_OPTIONS=--openssl-legacy-provider
 fi
 
+if [[ -s "$HOME/.config/forgit/forgit.plugin.zsh" ]]; then
+    source "$HOME/.config/forgit/forgit.plugin.zsh"
+fi
+
 alias vim=nvim
 
 export SVN_EDITOR='vim'
@@ -60,21 +64,23 @@ if [[ -s "$HOME/.zsh-histdb/sqlite-history.zsh" ]]; then
     autoload -Uz add-zsh-hook
 fi
 
-alias kubectl='echo use kprod or any other alias, you dumbass!'
-alias kprod='aws-vault exec eks-cluster-creator -- /usr/local/bin/kubectl'
-alias kstaging='aws-vault exec eks-cluster-creator -- /usr/local/bin/kubectl -n staging-web'
+KUBECTL=$(which kubectl)
+
+# alias kubectl='echo use kprod or any other alias, you dumbass!'
+alias kprod='kubectl'
+alias kstaging='kubectl -n staging-web'
 alias klocal='minikube kubectl --'
 
 function kubebash(){
-    instance=$(kprod get pods | awk '{print $1}' | fzf)
+    instance=$(kubectl get pods | awk '{print $1}' | fzf)
 
     if [[ -n $instance ]]; then
-        kprod exec $instance -ti bash
+        kubectl exec $instance -ti bash
     fi
 }
 
 function kubedescribe(){
-    instance=$(kprod get pods | awk '{print $1}' | fzf)
+    instance=$(kubectl get pods | awk '{print $1}' | fzf)
 
     if [[ -n $instance ]]; then
         kprod describe pod $instance | less
@@ -98,8 +104,16 @@ function kubedelete(){
     fi
 }
 
+function kubebashstaging(){
+    instance=$(kubectl -n staging-web get pods | awk '{print $1}' | fzf)
+
+    if [[ -n $instance ]]; then
+        kubectl -n staging-web exec $instance -ti bash
+    fi
+}
+
 function ff(){
-    file=$(ag . --nocolor -l -g '' --ignore vendor --ignore dist | fzf-tmux -m -d "40%")
+    file=$(ag . --nocolor -l -g '' --ignore vendor --ignore dist | fzf-tmux -m -d "70%" --query="$1" --preview="bat --color=always {}" --ansi --preview-window='right:60%' +1)
 
     if [[ -n $file ]]; then
         nvim $(echo $file | tr '\n' ' ')
@@ -107,7 +121,7 @@ function ff(){
 }
 
 function ffg(){
-    file=$(INITIAL_QUERY=""
+    file=$(INITIAL_QUERY="$1"
     RG_PREFIX="rg --column --line-number --no-heading --color=always --smart-case --ignore-file .gitignore"
     FZF_DEFAULT_COMMAND="$RG_PREFIX '$INITIAL_QUERY'" \
       fzf --bind "change:reload:$RG_PREFIX {q} || true" \
@@ -136,16 +150,20 @@ function getpass(){
 }
 
 function git-add(){ 
-    git add $(git status -s | egrep '^(\s|\?\?).*?$' | fzf -m --preview 'file_status.py {}' | cut -c4-)
+    forgit::add
     git commit -v
 }
 
 function git-remove(){
-    git reset HEAD -- $(git status -s | egrep -v '^(\s|\?\?).*?$' | fzf -m --preview 'file_status.py {}' | cut -c4-)
+    forgit::reset::head
 }
 
 function git-checkout(){
-    git checkout -- $(git status -s | egrep '^(\s|\?\?).*?$' | fzf -m --preview 'file_status.py {}' | cut -c4-) 
+    forgit::checkout::file
+}
+
+function git-branch(){
+    forgit::checkout::branch
 }
 
 alias addon-sdk="cd /opt/addon-sdk && source bin/activate; cd -"
@@ -202,5 +220,34 @@ fi;
 eval "$(pyenv init - --no-rehash zsh)"
 export PATH="$HOME/.pyenv/shims:${PATH}"
 export PYTHON_CONFIGURE_OPTS="--enable-shared"
+
+
+function tail-staging-worker() {
+    aws-vault exec eks-cluster-creator -- stern --tail=150 -n staging-web -l deploykey=staging-$1-mystacksdev -c mystacksdev-worker
+}
+
+function tail-staging-http() {
+    aws-vault exec eks-cluster-creator -- stern --tail=150 --exclude "healthz|readyz" -n staging-web -l deploykey=staging-$1-mystacksdev -c mystacksdev-container
+}
+
+function get-staging-pods() {
+    aws-vault exec eks-cluster-creator -- $KUBECTL -n staging-web get pods -l deploykey=staging-$1-mystacksdev
+}
+
+function watch-staging-pods() {
+    watch -n1 "$KUBECTL -n staging-web get pods -l deploykey=staging-$1-mystacksdev"
+}
+
+function watch-prod-pods() {
+    watch -n1 "$KUBECTL get pods -l app=mystacksdev"
+}
+
+function top-prod-pods() {
+    watch -n1 "$KUBECTL top pods --use-protocol-buffers -l app=mystacksdev"
+}
+
+function tail-prod-worker() {
+    stern --tail=150 -l pod=mystacksdev-worker -c mystacksdev-worker
+}
 
 pgrep -f "powerline-daemon -q" 2>&1 > /dev/null || powerline-daemon -q
