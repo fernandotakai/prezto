@@ -47,7 +47,9 @@ zstyle ':prezto:load' pmodule \
     'fasd' \
     'homebrew' \
     'ssh' \
-    'completion'
+    'completion' \
+    'pacman' \
+    'docker'
 
 
 #
