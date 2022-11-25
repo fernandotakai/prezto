@@ -23,6 +23,10 @@ if [[ -s "$HOME/.config/forgit/forgit.plugin.zsh" ]]; then
     source "$HOME/.config/forgit/forgit.plugin.zsh"
 fi
 
+if [[ (( $+commands[go] )) ]]; then
+    export PATH="$(go env GOPATH)/bin:$PATH"
+fi
+
 alias vim=nvim
 
 export SVN_EDITOR='vim'
@@ -67,9 +71,9 @@ fi
 KUBECTL=$(which kubectl)
 
 # alias kubectl='echo use kprod or any other alias, you dumbass!'
-alias kprod='kubectl'
-alias kstaging='kubectl -n staging-web'
-alias klocal='minikube kubectl --'
+# alias kprod='kubectl'
+# alias kstaging='kubectl -n staging-web'
+# alias klocal='minikube kubectl --'
 
 function kubebash(){
     instance=$(kubectl get pods | awk '{print $1}' | fzf)
@@ -96,26 +100,11 @@ function kubelogs(){
     fi
 }
 
-function kubedelete(){
-    instance=$(kubectl get pods | awk '{print $1}' | fzf)
-
-    if [[ -n $instance ]]; then
-        kubectl delete pod $instance
-    fi
-}
-
-function kubebashstaging(){
-    instance=$(kubectl -n staging-web get pods | awk '{print $1}' | fzf)
-
-    if [[ -n $instance ]]; then
-        kubectl -n staging-web exec $instance -ti bash
-    fi
-}
-
 function ff(){
     file=$(ag . --nocolor -l -g '' --ignore vendor --ignore dist | fzf-tmux -m -d "70%" --query="$1" --preview="bat --color=always {}" --ansi --preview-window='right:60%' +1)
 
     if [[ -n $file ]]; then
+        print -s "nvim $(echo $file | tr '\n' ' ')"
         nvim $(echo $file | tr '\n' ' ')
     fi
 }
@@ -166,9 +155,6 @@ function git-branch(){
     forgit::checkout::branch
 }
 
-alias addon-sdk="cd /opt/addon-sdk && source bin/activate; cd -"
-
- 
 function gbranch(){
     git rev-parse --abbrev-ref HEAD | copy-stuff
 }
@@ -209,6 +195,9 @@ function nvm() {
 
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
+[ -f /usr/share/fzf/key-bindings.zsh ] && source /usr/share/fzf/key-bindings.zsh
+[ -f /usr/share/fzf/completion.zsh ] && source /usr/share/fzf/completion.zsh
+
 # source /home/ftakai/.config/broot/launcher/bash/br
 export VIRTUAL_ENV_DISABLE_PROMPT=1
 # complete -C '/usr/bin/aws_completer' aws
@@ -221,33 +210,7 @@ eval "$(pyenv init - --no-rehash zsh)"
 export PATH="$HOME/.pyenv/shims:${PATH}"
 export PYTHON_CONFIGURE_OPTS="--enable-shared"
 
-
-function tail-staging-worker() {
-    aws-vault exec eks-cluster-creator -- stern --tail=150 -n staging-web -l deploykey=staging-$1-mystacksdev -c mystacksdev-worker
-}
-
-function tail-staging-http() {
-    aws-vault exec eks-cluster-creator -- stern --tail=150 --exclude "healthz|readyz" -n staging-web -l deploykey=staging-$1-mystacksdev -c mystacksdev-container
-}
-
-function get-staging-pods() {
-    aws-vault exec eks-cluster-creator -- $KUBECTL -n staging-web get pods -l deploykey=staging-$1-mystacksdev
-}
-
-function watch-staging-pods() {
-    watch -n1 "$KUBECTL -n staging-web get pods -l deploykey=staging-$1-mystacksdev"
-}
-
-function watch-prod-pods() {
-    watch -n1 "$KUBECTL get pods -l app=mystacksdev"
-}
-
-function top-prod-pods() {
-    watch -n1 "$KUBECTL top pods --use-protocol-buffers -l app=mystacksdev"
-}
-
-function tail-prod-worker() {
-    stern --tail=150 -l pod=mystacksdev-worker -c mystacksdev-worker
-}
+export AWS_CONFIG_FILE="/home/ftakai/Projects/hubs/devops/config/aws-vault.cfg"
+export KUBECONFIG="/home/ftakai/tmp/bootstrap-config/kubeconfig.yaml"
 
 pgrep -f "powerline-daemon -q" 2>&1 > /dev/null || powerline-daemon -q
