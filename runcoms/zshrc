@@ -96,14 +96,6 @@ function kubelogs(){
     fi
 }
 
-function nvim(){
-    if [[ $PWD = *"personal"* ]]; then
-        /opt/homebrew/bin/nvim -u $HOME/.config/nvim/init_ruff.vim $*
-    else
-        /opt/homebrew/bin/nvim $*
-    fi
-}
-
 function ff(){
     file=$(fd -t f | fzf-tmux -m -d "70%" --query="$1" --preview="bat --color=always {}" --ansi --preview-window='right:60%' +1)
 
