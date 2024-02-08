@@ -1,12 +1,16 @@
 zmodload zsh/zprof
 
+alias python=python3
+alias pip=pip3
+
 # Customize to your needs...
 export PATH=$HOME/bin:$PATH
 
-if [[ -f "$HOME/homebrew/bin/brew" ]]; then
-    eval "$(/Users/ftakai/homebrew/bin/brew shellenv)"
-    fpath=("$HOME/homebrew/share/zsh/site-functions" $fpath)
-    export PATH="/Users/ftakai/homebrew/opt/coreutils/libexec/gnubin:$PATH"
+if [[ -f "/opt/homebrew/bin/brew" ]]; then
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+    fpath=("/opt/homebrew/share/zsh/site-functions" $fpath)
+    export PATH="/opt/homebrew/opt/coreutils/libexec/gnubin:$PATH"
+    # export LIBRARY_PATH=/opt/homebrew/opt/openssl/lib/:/opt/homebrew/lib
 fi
 
 # My exports
@@ -42,11 +46,6 @@ export HISTSIZE=1000000
 export SAVEHIST=1000000
 export HISTFILE="$HOME/.zsh_history"
 
-if [[ -s "/usr/bin/virtualenvwrapper.sh" ]]; then
-    source /usr/bin/virtualenvwrapper.sh
-    export WORKON_HOME="$HOME/Projects/virtualenvs"
-fi
-
 alias z='j'
 alias history="fc -l 1"
 
@@ -70,10 +69,7 @@ fi
 
 KUBECTL=$(which kubectl)
 
-# alias kubectl='echo use kprod or any other alias, you dumbass!'
-# alias kprod='kubectl'
-# alias kstaging='kubectl -n staging-web'
-# alias klocal='minikube kubectl --'
+alias k='kubectl'
 
 function kubebash(){
     instance=$(kubectl get pods | awk '{print $1}' | fzf)
@@ -100,8 +96,16 @@ function kubelogs(){
     fi
 }
 
+function nvim(){
+    if [[ $PWD = *"personal"* ]]; then
+        /opt/homebrew/bin/nvim -u $HOME/.config/nvim/init_ruff.vim $*
+    else
+        /opt/homebrew/bin/nvim $*
+    fi
+}
+
 function ff(){
-    file=$(ag . --nocolor -l -g '' --ignore vendor --ignore dist | fzf-tmux -m -d "70%" --query="$1" --preview="bat --color=always {}" --ansi --preview-window='right:60%' +1)
+    file=$(fd -t f | fzf-tmux -m -d "70%" --query="$1" --preview="bat --color=always {}" --ansi --preview-window='right:60%' +1)
 
     if [[ -n $file ]]; then
         print -s "nvim $(echo $file | tr '\n' ' ')"
@@ -119,23 +123,10 @@ function ffg(){
 
     if [[ ! -z $file ]]; then
         split=("${(@s/:/)file}")
+        print -s "vim $split[1] '+$split[2] norm! zzV'"
         vim $split[1] "+$split[2] norm! zzV"
     fi
 
-}
-
-function getpass(){
-    id=$(lpass ls | sort | fzf | sed -r 's/^.*id: ([0-9]+).*$/\1/' | tr -d '\n')
-
-    if [[ -n $id ]]; then
-        pass=$(lpass show $id | grep Password | cut -d ':' -f 2 | tr -d ' ' | tr -d '\n') 
-        if [[ $1 == '-n' ]]; then
-            echo $pass
-        else 
-            echo -n $pass | copy-stuff
-            echo "copied password"
-        fi
-    fi
 }
 
 function git-add(){ 
@@ -180,16 +171,9 @@ function update-all-packages(){
 
 stty -ixon
 
-function nvm() {
-    export NVM_DIR="/home/ftakai/.nvm"
-    [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"  # This loads nvm
+function check-mullvad() {
+    curl https://am.i.mullvad.net/json | jq
 }
-
-# The next line updates PATH for the Google Cloud SDK.
-[[ -s "$HOME/builds/google-cloud-sdk/path.zsh.inc" ]] && source "$HOME/builds/google-cloud-sdk/path.zsh.inc"
-
-# The next line enables shell command completion for gcloud.
-[[ -s "$HOME/builds/google-cloud-sdk/completion.zsh.inc" ]] && source "$HOME/builds/google-cloud-sdk/completion.zsh.inc"
 
 [[ -s "$HOME/bin/kubectl_completion" ]] && source "$HOME/bin/kubectl_completion"
 
@@ -206,11 +190,22 @@ if [[ ! -f $(which pyenv) ]]; then
     export PATH="$HOME/.pyenv/bin:$PATH"
 fi;
 
-eval "$(pyenv init - --no-rehash zsh)"
-export PATH="$HOME/.pyenv/shims:${PATH}"
+# eval "$(pyenv init - --no-rehash zsh)"
+# export PATH="$HOME/.pyenv/shims:${PATH}"
 export PYTHON_CONFIGURE_OPTS="--enable-shared"
 
-export AWS_CONFIG_FILE="/home/ftakai/Projects/hubs/devops/config/aws-vault.cfg"
-export KUBECONFIG="/home/ftakai/tmp/bootstrap-config/kubeconfig.yaml"
+if [[ $(uname) == "Darwin" ]]; then
+    export AWS_CONFIG_FILE="$HOME/Projects/hubs/devops/config/aws-vault.cfg"
+    export KUBECONFIG="$HOME/tmp/bootstrap-config/kubeconfig.yaml:$HOME/.kube/config"
+fi
 
-pgrep -f "powerline-daemon -q" 2>&1 > /dev/null || powerline-daemon -q
+export GPG_TTY=$(tty)
+# eval "$(pyenv virtualenv-init -)"
+
+if [[ -f $(which nodenv) ]]; then
+    eval "$(nodenv init -)"
+fi;
+
+if [[ -f $(which powerline-daemon) ]]; then
+    pgrep -f "powerline-daemon -q" 2>&1 > /dev/null || powerline-daemon -q
+fi
