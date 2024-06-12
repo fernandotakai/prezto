@@ -218,3 +218,7 @@ fi
 if [[ -f $(which op) ]]; then
     eval "$(op completion zsh)"; compdef _op op
 fi
+
+if [[ -f $(which atuin) ]]; then
+    eval "$(atuin init zsh --disable-up-arrow)"
+fi
