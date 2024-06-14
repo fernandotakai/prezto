@@ -187,7 +187,8 @@ function check-mullvad() {
 export VIRTUAL_ENV_DISABLE_PROMPT=1
 # complete -C '/usr/bin/aws_completer' aws
 
-if [[ ! -f $(which pyenv) ]]; then
+
+if (( $+commands[pyenv] )); then
     export PATH="$HOME/.pyenv/bin:$PATH"
 fi;
 
@@ -211,22 +212,22 @@ fi
 export GPG_TTY=$(tty)
 # eval "$(pyenv virtualenv-init -)"
 
-if [[ -f $(which nodenv) ]]; then
+if (( $+commands[nodenv] )); then
     eval "$(nodenv init -)"
 fi;
 
-if [[ -f $(which powerline-daemon) ]]; then
+if (( $+commands[powerline-daemon] )); then
     pgrep -f "powerline-daemon -q" 2>&1 > /dev/null || powerline-daemon -q
 fi
 
-if [[ -f $(which direnv) ]]; then
+if (( $+commands[direnv] )); then
     eval "$(direnv hook zsh)"
 fi
 
-if [[ -f $(which op) ]]; then
+if (( $+commands[op] )); then
     eval "$(op completion zsh)"; compdef _op op
 fi
 
-if [[ -f $(which atuin) ]]; then
+if (( $+commands[atuin] )); then
     eval "$(atuin init zsh --disable-up-arrow)"
 fi
