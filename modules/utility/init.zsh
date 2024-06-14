@@ -139,6 +139,8 @@ fi
 # macOS Everywhere
 if is-darwin; then
   alias o='open'
+elif is-orbstack; then
+  alias o='open'
 elif is-cygwin; then
   alias o='cygstart'
   alias pbcopy='tee > /dev/clipboard'
