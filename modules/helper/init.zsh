@@ -54,3 +54,8 @@ function is-cygwin {
 function is-termux {
   [[ "$OSTYPE" == linux-android ]]
 }
+
+# Checks if running on orbstack.
+function is-orbstack {
+  (( $+commands[mac] )) && [[ $OSTYPE == linux* ]]
+}
