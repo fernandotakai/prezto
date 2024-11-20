@@ -67,7 +67,19 @@ function kubebash(){
     instance=$(kubectl get pods | awk '{print $1}' | fzf)
 
     if [[ -n $instance ]]; then
-        kubectl exec $instance -ti bash
+        echo "exec'ing into $instance"
+        echo "kubectl exec $instance -ti -- bash"
+        kubectl exec $instance -ti -- bash
+    fi
+}
+
+
+function kubesh(){
+    instance=$(kubectl get pods | awk '{print $1}' | fzf)
+
+    if [[ -n $instance ]]; then
+        echo "exec'ing into $instance"
+        kubectl exec $instance -ti -- sh
     fi
 }
 
@@ -168,6 +180,10 @@ function check-mullvad() {
     curl https://am.i.mullvad.net/json | jq
 }
 
+function jwt-decode() {
+  jq -R 'split(".") |.[0:2] | map(@base64d) | map(fromjson)' <<< $1
+}
+
 [[ -s "$HOME/bin/kubectl_completion" ]] && source "$HOME/bin/kubectl_completion"
 
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
@@ -206,7 +222,6 @@ if is-linux && (( $+commands[systemctl] )); then
     alias enables="sudo systemctl enable"
     alias disables="sudo systemctl disable"
     alias status="sudo systemctl status"
-    eval "$(pyenv init - --no-rehash zsh)"
 fi
 
 export GPG_TTY=$(tty)
@@ -239,4 +254,8 @@ fi
 if (( $+commands[mirrord] )); then
     eval "$(mirrord completions zsh)"
     export MIRRORD_CHECK_VERSION="false"
+fi
+
+if (( $+commands[uv] )); then
+    eval "$(uv generate-shell-completion zsh)"
 fi
