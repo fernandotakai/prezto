@@ -6,7 +6,7 @@ alias pip=pip3
 # Customize to your needs...
 export PATH=$HOME/bin:$PATH
 
-export PATH="$PATH:/home/fernando/.local/bin"
+export PATH="$PATH:$HOME/.local/bin:$HOME/.cargo/bin"
 
 if [[ -f "/opt/homebrew/bin/brew" ]]; then
     eval "$(/opt/homebrew/bin/brew shellenv)"
@@ -214,6 +214,9 @@ if is-orbstack; then
     export BROWSER="open"
     export AWS_CONFIG_FILE="$HOME/Projects/hubs/devops/config/aws-vault.cfg"
     export AWS_VAULT_BACKEND=pass
+    eval "$(orbctl completion zsh)"
+    compdef _orbctl orbctl
+    compdef _orbctl orb
 fi
 
 if is-linux && (( $+commands[systemctl] )); then
@@ -226,10 +229,6 @@ fi
 
 export GPG_TTY=$(tty)
 # eval "$(pyenv virtualenv-init -)"
-
-if (( $+commands[nodenv] )); then
-    eval "$(nodenv init -)"
-fi;
 
 if (( $+commands[powerline-daemon] )); then
     pgrep -f "powerline-daemon -q" 2>&1 > /dev/null || powerline-daemon -q
